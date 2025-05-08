@@ -99,11 +99,22 @@ fn test_binary_search_tree(){
         22 // non-existent key
     ];
 
+    //predecessor test
+    let query_keys_2 = vec![
+        2, // min_node, should return None
+        20, // max_node, should return its parent (Some 18)
+        15, // root_node, should return the maximum of its left tree
+        13,
+        9, 7, // other keys
+        22 // non-existent key
+    ];
+
+    //sekalian saya benerin mainnya pak, tadi yang bawah itu masuk ke for
     for &key in query_keys.iter() {
         if let Some(node) = rootlink.borrow().tree_search(&key) {
             print!("successor of node ({}) is ", key);
 
-            if let Some(successor) = BstNode::tree_successor_simpler(&node) {
+            if let Some(successor) = BstNode::tree_successor(&node) {
                 println!("{:?}", successor.borrow().key);
             } else {
                 println!("not found");
@@ -111,20 +122,61 @@ fn test_binary_search_tree(){
         } else {
             println!("node with key of {} does not exist, failed to get successor", key)
         }
-
-        let mut rootlink2 = Some(BstNode::tree_insert(&None,&15));
-        let keys = vec![6,18,3,7,17,20,2,4,13,9];
-        for k in &keys{
-            rootlink2 = Some(BstNode::tree_insert(&rootlink2, k));
-        }
-
-        //test the insertion by printing the tree
-        generate_dotfile_bst(&rootlink2.as_ref().unwrap(), "bst.dot");
-
-        //test removal
-        let rootalter = BstNode::tree_delete(&rootlink2.as_ref().unwrap());
-        generate_dotfile_bst(&rootalter, "bst_delete_root.dot");
     }
+
+    //predecessor saya ambil dari successor yang dibalik
+    for &key in query_keys_2.iter() {
+        if let Some(node) = rootlink.borrow().tree_search(&key) {
+            print!("predecessor of node ({}) is ", key);
+
+            if let Some(predecessor) = BstNode::tree_predecessor(&node) {
+                println!("{:?}", predecessor.borrow().key);
+            } else {
+                println!("not found");
+            }
+        } else {
+            println!("node with key of {} does not exist, failed to get predecessor", key)
+        }
+    }
+
+    let mut rootlink2 = Some(BstNode::tree_insert(&None,&15));
+    let keys = vec![6,18,3,7,17,20,2,4,13,9];
+    for k in &keys{
+        rootlink2 = Some(BstNode::tree_insert(&rootlink2, k));
+    }
+
+    //test the insertion by printing the tree
+    generate_dotfile_bst(&rootlink2.as_ref().unwrap(), "bst.dot");
+
+    //test removal
+    let rootalter = BstNode::tree_delete(&rootlink2.as_ref().unwrap());
+    generate_dotfile_bst(&rootalter, "bst_delete_root.dot");
+
+    //test add_node
+    let root = BstNode::new_bst_nodelink(10);
+    generate_dotfile_bst(&root, "add_node_initial.dot");
+
+    if BstNode::add_node(&root, 5) {
+        println!("Berhasil tambah 5 ke root");
+    } else {
+        println!("Gagal tambah 5 ke root");
+    }
+
+    if BstNode::add_node(&root, 15) {
+        println!("Berhasil tambah 15 ke root");
+    } else {
+        println!("Gagal tambah 15 ke root");
+    }
+
+    if let Some(left_child) = &root.borrow().left {
+        if BstNode::add_node(left_child, 3) {
+            println!("Berhasil tambah 3 ke node 5");
+        } else {
+            println!("Gagal tambah 3 ke node 5");
+        }
+    }
+    
+    generate_dotfile_bst(&root, "add_node_final.dot");
 }
 
 fn test_index(){
