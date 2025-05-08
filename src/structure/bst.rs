@@ -1,5 +1,6 @@
 use std::cell::{Ref, RefCell};
 use std::rc::{Rc, Weak};
+use std::collections::VecDeque;
 
 pub type BstNodeLink = Rc<RefCell<BstNode>>;
 pub type WeakBstNodeLink = Weak<RefCell<BstNode>>;
@@ -224,7 +225,7 @@ impl BstNode {
                 if BstNode::is_right_child_exist(current_node){
                     let right_node = current_node.borrow().right.clone();
                     return BstNode::tree_insert(&right_node, z);
-                } else{
+                } else {
                     //we can't recurse so we insert to the right
                     current_node.borrow_mut().add_right_child(current_node, *z);
                 }
@@ -264,6 +265,60 @@ impl BstNode {
         false
     }
 
+    pub fn add_node(target_node: &BstNodeLink, value: i32) -> bool {
+
+        let target_key = match target_node.borrow().key {
+            Some(k) => k,
+            None => return false,
+        };
+        
+        let mut new_node = BstNode::new_bst_nodelink(value);
+
+        if value < target_key {
+            {
+                let mut target = target_node.borrow_mut();
+                if target.left.is_none() {
+                    new_node.borrow_mut().parent = Some(BstNode::downgrade(target_node));
+                    target.left = Some(new_node);
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            {
+                let mut target = target_node.borrow_mut();
+                if target.right.is_none() {
+                    new_node.borrow_mut().parent = Some(BstNode::downgrade(target_node));
+                    target.right = Some(new_node);
+                } else {
+                    return false;
+                }
+            }
+        }
+    
+        true
+    }
+
+    pub fn tree_predecessor(x_node: &BstNodeLink) -> Option<BstNodeLink> {
+        if let Some(left_node) = &x_node.borrow().left {
+            return Some(left_node.borrow().maximum());
+        }
+
+        let mut x = x_node.clone();
+        let mut parent = BstNode::upgrade_weak_to_strong(x.borrow().parent.clone());
+    
+        while let Some(p) = parent.take() {
+            if let Some(right_child) = p.borrow().right.as_ref() {
+                if BstNode::is_node_match(right_child, &x) {
+                    return Some(Rc::clone(&p)); 
+                }
+            }
+            x = p;
+            parent = BstNode::upgrade_weak_to_strong(x.borrow().parent.clone());
+        }
+    
+        None
+    }
     /**
      * Alternate simpler version of tree_successor that made use of is_nil checking
      */
